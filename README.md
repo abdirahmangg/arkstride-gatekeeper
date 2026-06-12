@@ -1,1 +1,0 @@
-# arkstride-gatekeeper
