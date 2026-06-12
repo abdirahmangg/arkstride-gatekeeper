@@ -1,0 +1,20 @@
+{
+	"assets": [
+		{
+			"name": "github",
+			"type": "source_control"
+		},
+		{
+			"name": "aws",
+			"type": "cloud"
+		},
+		{
+			"name": "postgres",
+			"type": "database"
+		},
+		{
+			"name": "s3",
+			"type": "storage"
+		}
+	]
+}
