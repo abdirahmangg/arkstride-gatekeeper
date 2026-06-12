@@ -19,6 +19,6 @@ jobs:
       - name: Verify OPA
         run: opa version
 
-      - name: Verify Dangerous Scenario
+      - name: Verify Safe Scenario
         run: |
-          python scripts/arkstride.py scenarios/agent_action.json
+          python scripts/arkstride.py scenarios/terraform_plan.json
