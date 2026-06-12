@@ -1,0 +1,7 @@
+{
+	"actor": "developer",
+	"actor_type": "human",
+	"action": "read",
+	"target": "postgres",
+	"environment": "dev"
+}
