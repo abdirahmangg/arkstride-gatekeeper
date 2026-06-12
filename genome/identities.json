@@ -1,0 +1,19 @@
+{
+	"identities": [
+		{
+			"name": "human_admin",
+			"type": "human",
+			"trust_level": 2
+		},
+		{
+			"name": "developer",
+			"type": "human",
+			"trust_level": 1
+		},
+		{
+			"name": "ai_coding_agent",
+			"type": "ai_agent",
+			"trust_level": 0
+		}
+	]
+}
