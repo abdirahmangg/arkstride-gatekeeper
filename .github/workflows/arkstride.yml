@@ -1,0 +1,26 @@
+name: ARKSTRIDE Reality Verification
+
+on:
+	push:
+	pull_request:
+
+jobs:
+	reality-verification:
+		runs-on: ubuntu-latest
+
+		steps:
+			- name: Checkout
+				uses: actions/checkout@v4
+
+			- name: Install OPA
+				run: |
+					curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64_static
+					chmod +x opa
+					sudo mv opa /usr/local/bin/
+
+			- name: Verify OPA
+				run: opa version
+
+			- name: Verify Dangerous Scenario
+				run: |
+					python scripts/arkstride.py scenarios/agent_action.json
