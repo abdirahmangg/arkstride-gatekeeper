@@ -1,0 +1,43 @@
+
+{
+	"systems": [
+		{
+			"name": "production_database",
+			"criticality": "crown_jewel",
+			"allowed_actions": [
+				"read",
+				"backup"
+			],
+			"forbidden_actions": [
+				"delete",
+				"drop",
+				"public_expose"
+			]
+		},
+		{
+			"name": "customer_pii",
+			"criticality": "crown_jewel",
+			"allowed_actions": [
+				"read"
+			],
+			"forbidden_actions": [
+				"delete",
+				"export",
+				"public_expose"
+			]
+		},
+		{
+			"name": "payment_system",
+			"criticality": "crown_jewel",
+			"allowed_actions": [
+				"read"
+			],
+			"forbidden_actions": [
+				"delete",
+				"modify",
+				"disable"
+			]
+		}
+	]
+}
+
