@@ -1,0 +1,8 @@
+{
+  "actor": "developer",
+  "actor_type": "human",
+  "action": "grant_admin",
+  "target": "service_account",
+  "environment": "prod",
+  "reason": "temporary deployment access"
+}

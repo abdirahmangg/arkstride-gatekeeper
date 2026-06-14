@@ -1,0 +1,28 @@
+{
+  "risk_rules": [
+    {
+      "action": "delete",
+      "target": "production_database",
+      "future_risk": 100,
+      "reason": "Deleting the production database creates catastrophic business failure."
+    },
+    {
+      "action": "public_expose",
+      "target": "*",
+      "future_risk": 95,
+      "reason": "Public exposure can lead to data leakage or system takeover."
+    },
+    {
+      "action": "grant_admin",
+      "target": "*",
+      "future_risk": 90,
+      "reason": "Granting admin rights can create privilege escalation paths."
+    },
+    {
+      "action": "read",
+      "target": "postgres",
+      "future_risk": 5,
+      "reason": "Reading a development database has low operational risk."
+    }
+  ]
+}
