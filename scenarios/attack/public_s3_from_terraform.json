@@ -1,0 +1,8 @@
+{
+  "actor": "developer",
+  "actor_type": "human",
+  "action": "public_expose",
+  "target": "s3",
+  "environment": "prod",
+  "reason": "Terraform file examples/unsafe_terraform.tf appears to allow public S3 exposure."
+}
