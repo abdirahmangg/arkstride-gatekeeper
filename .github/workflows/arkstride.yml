@@ -24,13 +24,10 @@ jobs:
           sudo mv opa /usr/local/bin/
 
       - name: Verify OPA Installation
-        run: |
-          opa version
+        run: opa version
 
-      - name: Verify Python Installation
-        run: |
-          python --version
+      - name: Verify Safe Scenarios
+        run: python scripts/verify_all.py
 
-      - name: Verify All Safe Scenarios
-        run: |
-          python scripts/verify_all.py
+      - name: Scan Terraform Infrastructure
+        run: python scripts/scan_terraform.py
