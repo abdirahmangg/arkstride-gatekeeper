@@ -1,24 +1,37 @@
-name: ARKSTRIDE Reality Verification
+name: Arkstride CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  reality-verification:
+  verify:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
 
       - name: Install OPA
         run: |
           curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64_static
           chmod +x opa
-          sudo mv opa /usr/local/bin/
+          sudo mv opa /usr/local/bin/opa
+          opa version
 
-      - name: Verify OPA
-        run: opa version
-
-      - name: Verify Safe Scenario
+      - name: Run Arkstride verification
         run: |
-          python scripts/arkstride.py scenarios/terraform_plan.json
+          python scripts/verify_all.py
