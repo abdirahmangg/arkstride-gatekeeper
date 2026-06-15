@@ -5,20 +5,26 @@ from pathlib import Path
 
 POLICY_FILE = "policies/arkstride.rego"
 RISK_GRAPH_FILE = "genome/risk_graph.json"
-ATTACK_GRAPH_FILE = "genome/attack_graph.json"
+ATTACK_GRAPH_FILE = Path("genome/attack_graph.json")
+FUTURE_LIBRARY_FILE = Path("genome/future_library.json")
+
 
 def load_json(path):
     with open(path, "r") as f:
         return json.load(f)
+
 
 def evaluate_policy(scenario_file):
     result = subprocess.run(
         [
             "opa",
             "eval",
-            "-f", "json",
-            "-i", scenario_file,
-            "-d", POLICY_FILE,
+            "-f",
+            "json",
+            "-i",
+            scenario_file,
+            "-d",
+            POLICY_FILE,
             "data.arkstride.deny",
         ],
         capture_output=True,
@@ -32,13 +38,18 @@ def evaluate_policy(scenario_file):
 
     return json.loads(result.stdout)
 
+
 def extract_denies(data):
     try:
         return data["result"][0]["expressions"][0]["value"]
     except Exception:
         return []
 
+
 def calculate_future_risk(scenario):
+    if not Path(RISK_GRAPH_FILE).exists():
+        return 10, "No high-risk future state matched."
+
     risk_graph = load_json(RISK_GRAPH_FILE)
 
     default_risk = 10
@@ -53,6 +64,7 @@ def calculate_future_risk(scenario):
 
     return default_risk, matched_reason
 
+
 def build_adjacency(edges):
     graph = {}
 
@@ -63,10 +75,11 @@ def build_adjacency(edges):
 
         graph.setdefault(source, []).append({
             "to": target,
-            "relationship": relationship
+            "relationship": relationship,
         })
 
     return graph
+
 
 def find_paths_to_crown_jewels(start, adjacency, crown_jewels):
     queue = [(start, [start], [])]
@@ -79,7 +92,7 @@ def find_paths_to_crown_jewels(start, adjacency, crown_jewels):
             found_paths.append({
                 "path": path,
                 "relationships": relationships,
-                "impact": current
+                "impact": current,
             })
             continue
 
@@ -89,13 +102,16 @@ def find_paths_to_crown_jewels(start, adjacency, crown_jewels):
             if next_node in path:
                 continue
 
-            queue.append((
-                next_node,
-                path + [next_node],
-                relationships + [neighbor["relationship"]]
-            ))
+            queue.append(
+                (
+                    next_node,
+                    path + [next_node],
+                    relationships + [neighbor["relationship"]],
+                )
+            )
 
     return found_paths
+
 
 def risk_from_attack_paths(paths):
     if not paths:
@@ -122,8 +138,9 @@ def risk_from_attack_paths(paths):
 
     return max_score
 
+
 def analyze_attack_graph(target):
-    if not Path(ATTACK_GRAPH_FILE).exists():
+    if not ATTACK_GRAPH_FILE.exists():
         return [], 0
 
     attack_graph = load_json(ATTACK_GRAPH_FILE)
@@ -134,6 +151,34 @@ def analyze_attack_graph(target):
     graph_risk = risk_from_attack_paths(paths)
 
     return paths, graph_risk
+
+
+def simulate_possible_futures(scenario):
+    if not FUTURE_LIBRARY_FILE.exists():
+        return []
+
+    library = load_json(FUTURE_LIBRARY_FILE)
+    futures = []
+
+    for future in library.get("futures", []):
+        action_match = future["trigger_action"] == scenario.get("action")
+        target_match = (
+            future["trigger_target"] == scenario.get("target")
+            or future["trigger_target"] == "*"
+        )
+
+        if action_match and target_match:
+            futures.append(future)
+
+    return sorted(futures, key=lambda item: item["risk"], reverse=True)
+
+
+def risk_from_futures(futures):
+    if not futures:
+        return 0
+
+    return max(future["risk"] for future in futures)
+
 
 def decision_from_risk(future_risk, graph_risk, denies):
     total_risk = max(future_risk, graph_risk)
@@ -149,6 +194,7 @@ def decision_from_risk(future_risk, graph_risk, denies):
 
     return "ALLOW", total_risk
 
+
 def print_attack_paths(paths):
     if not paths:
         print("\nAttack Paths: none found")
@@ -160,6 +206,23 @@ def print_attack_paths(paths):
         readable_path = " -> ".join(item["path"])
         print(f"- {readable_path}")
         print(f"  Impact: {item['impact']}")
+
+
+def print_possible_futures(futures):
+    if not futures:
+        print("\nPossible Futures: none simulated")
+        return
+
+    print("\nPossible Futures:")
+
+    for future in futures:
+        readable_path = " -> ".join(future["future_path"])
+        print(f"- {future['name']}")
+        print(f"  Path: {readable_path}")
+        print(f"  Impact: {future['impact']}")
+        print(f"  Risk: {future['risk']}/100")
+        print(f"  Description: {future['description']}")
+
 
 def main():
     if len(sys.argv) != 2:
@@ -180,7 +243,14 @@ def main():
     future_risk, risk_reason = calculate_future_risk(scenario)
     attack_paths, graph_risk = analyze_attack_graph(scenario.get("target"))
 
-    decision, total_risk = decision_from_risk(future_risk, graph_risk, denies)
+    possible_futures = simulate_possible_futures(scenario)
+    future_simulation_risk = risk_from_futures(possible_futures)
+
+    decision, total_risk = decision_from_risk(
+        max(future_risk, future_simulation_risk),
+        graph_risk,
+        denies
+    )
 
     print("\nARKSTRIDE REALITY VERIFICATION\n")
 
@@ -191,10 +261,12 @@ def main():
 
     print(f"\nFuture Risk: {future_risk}/100")
     print(f"Attack Graph Risk: {graph_risk}/100")
+    print(f"Future Simulation Risk: {future_simulation_risk}/100")
     print(f"Total Risk: {total_risk}/100")
     print(f"Risk Reason: {risk_reason}")
 
     print_attack_paths(attack_paths)
+    print_possible_futures(possible_futures)
 
     print(f"\nDecision: {decision}")
 
@@ -207,6 +279,7 @@ def main():
         return 1
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

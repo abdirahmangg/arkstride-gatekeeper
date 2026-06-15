@@ -1,0 +1,40 @@
+{
+  "futures": [
+    {
+      "name": "customer_data_exposure",
+      "trigger_action": "public_expose",
+      "trigger_target": "s3",
+      "future_path": ["s3", "aws_account", "iam_roles", "production_database", "customer_pii"],
+      "impact": "customer_pii",
+      "risk": 100,
+      "description": "Public S3 exposure can lead to leaked credentials, AWS compromise, database access, and customer PII exposure."
+    },
+    {
+      "name": "payment_system_compromise",
+      "trigger_action": "public_expose",
+      "trigger_target": "s3",
+      "future_path": ["s3", "aws_account", "payment_system"],
+      "impact": "payment_system",
+      "risk": 95,
+      "description": "Public S3 exposure can expose credentials that give attackers access to payment infrastructure."
+    },
+    {
+      "name": "production_database_loss",
+      "trigger_action": "delete",
+      "trigger_target": "production_database",
+      "future_path": ["production_database", "business_outage"],
+      "impact": "business_continuity",
+      "risk": 100,
+      "description": "Deleting the production database can cause catastrophic operational failure."
+    },
+    {
+      "name": "ai_agent_lateral_movement",
+      "trigger_action": "grant_admin",
+      "trigger_target": "service_account",
+      "future_path": ["service_account", "iam_roles", "aws_account", "production_database"],
+      "impact": "production_database",
+      "risk": 92,
+      "description": "Admin access to a service account can allow an AI or attacker to move laterally into production systems."
+    }
+  ]
+}
