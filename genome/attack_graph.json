@@ -1,0 +1,48 @@
+{
+  "nodes": [
+    "internet",
+    "s3",
+    "aws_account",
+    "iam_roles",
+    "production_database",
+    "customer_pii",
+    "payment_system"
+  ],
+  "edges": [
+    {
+      "from": "internet",
+      "to": "s3",
+      "relationship": "public_access"
+    },
+    {
+      "from": "s3",
+      "to": "aws_account",
+      "relationship": "credential_leakage"
+    },
+    {
+      "from": "aws_account",
+      "to": "iam_roles",
+      "relationship": "privilege_escalation"
+    },
+    {
+      "from": "iam_roles",
+      "to": "production_database",
+      "relationship": "database_access"
+    },
+    {
+      "from": "production_database",
+      "to": "customer_pii",
+      "relationship": "contains_sensitive_data"
+    },
+    {
+      "from": "aws_account",
+      "to": "payment_system",
+      "relationship": "financial_system_access"
+    }
+  ],
+  "crown_jewels": [
+    "customer_pii",
+    "payment_system",
+    "production_database"
+  ]
+}

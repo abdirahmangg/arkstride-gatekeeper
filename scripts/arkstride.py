@@ -5,6 +5,7 @@ from pathlib import Path
 
 POLICY_FILE = "policies/arkstride.rego"
 RISK_GRAPH_FILE = "genome/risk_graph.json"
+ATTACK_GRAPH_FILE = "genome/attack_graph.json"
 
 def load_json(path):
     with open(path, "r") as f:
@@ -15,12 +16,9 @@ def evaluate_policy(scenario_file):
         [
             "opa",
             "eval",
-            "-f",
-            "json",
-            "-i",
-            scenario_file,
-            "-d",
-            POLICY_FILE,
+            "-f", "json",
+            "-i", scenario_file,
+            "-d", POLICY_FILE,
             "data.arkstride.deny",
         ],
         capture_output=True,
@@ -55,36 +53,134 @@ def calculate_future_risk(scenario):
 
     return default_risk, matched_reason
 
-def decision_from_risk(risk, denies):
+def build_adjacency(edges):
+    graph = {}
+
+    for edge in edges:
+        source = edge["from"]
+        target = edge["to"]
+        relationship = edge.get("relationship", "connected_to")
+
+        graph.setdefault(source, []).append({
+            "to": target,
+            "relationship": relationship
+        })
+
+    return graph
+
+def find_paths_to_crown_jewels(start, adjacency, crown_jewels):
+    queue = [(start, [start], [])]
+    found_paths = []
+
+    while queue:
+        current, path, relationships = queue.pop(0)
+
+        if current in crown_jewels and current != start:
+            found_paths.append({
+                "path": path,
+                "relationships": relationships,
+                "impact": current
+            })
+            continue
+
+        for neighbor in adjacency.get(current, []):
+            next_node = neighbor["to"]
+
+            if next_node in path:
+                continue
+
+            queue.append((
+                next_node,
+                path + [next_node],
+                relationships + [neighbor["relationship"]]
+            ))
+
+    return found_paths
+
+def risk_from_attack_paths(paths):
+    if not paths:
+        return 0
+
+    max_score = 0
+
+    for item in paths:
+        path_length = len(item["path"])
+
+        if item["impact"] == "customer_pii":
+            impact_score = 100
+        elif item["impact"] == "payment_system":
+            impact_score = 95
+        elif item["impact"] == "production_database":
+            impact_score = 90
+        else:
+            impact_score = 70
+
+        distance_penalty = max(0, (path_length - 2) * 10)
+        score = max(50, impact_score - distance_penalty)
+
+        max_score = max(max_score, score)
+
+    return max_score
+
+def analyze_attack_graph(target):
+    if not Path(ATTACK_GRAPH_FILE).exists():
+        return [], 0
+
+    attack_graph = load_json(ATTACK_GRAPH_FILE)
+    adjacency = build_adjacency(attack_graph.get("edges", []))
+    crown_jewels = set(attack_graph.get("crown_jewels", []))
+
+    paths = find_paths_to_crown_jewels(target, adjacency, crown_jewels)
+    graph_risk = risk_from_attack_paths(paths)
+
+    return paths, graph_risk
+
+def decision_from_risk(future_risk, graph_risk, denies):
+    total_risk = max(future_risk, graph_risk)
+
     if denies:
-        return "BLOCK"
+        return "BLOCK", total_risk
 
-    if risk >= 80:
-        return "BLOCK"
+    if total_risk >= 80:
+        return "BLOCK", total_risk
 
-    if risk >= 50:
-        return "REVIEW"
+    if total_risk >= 50:
+        return "REVIEW", total_risk
 
-    return "ALLOW"
+    return "ALLOW", total_risk
+
+def print_attack_paths(paths):
+    if not paths:
+        print("\nAttack Paths: none found")
+        return
+
+    print("\nAttack Paths:")
+
+    for item in paths:
+        readable_path = " -> ".join(item["path"])
+        print(f"- {readable_path}")
+        print(f"  Impact: {item['impact']}")
 
 def main():
     if len(sys.argv) != 2:
         print("Usage:")
         print("python scripts/arkstride.py <scenario.json>")
-        sys.exit(1)
+        return 1
 
     scenario_file = sys.argv[1]
 
     if not Path(scenario_file).exists():
         print(f"Scenario not found: {scenario_file}")
-        sys.exit(1)
+        return 1
 
     scenario = load_json(scenario_file)
     policy_data = evaluate_policy(scenario_file)
     denies = extract_denies(policy_data)
 
     future_risk, risk_reason = calculate_future_risk(scenario)
-    decision = decision_from_risk(future_risk, denies)
+    attack_paths, graph_risk = analyze_attack_graph(scenario.get("target"))
+
+    decision, total_risk = decision_from_risk(future_risk, graph_risk, denies)
 
     print("\nARKSTRIDE REALITY VERIFICATION\n")
 
@@ -94,7 +190,11 @@ def main():
     print(f"Environment: {scenario.get('environment')}")
 
     print(f"\nFuture Risk: {future_risk}/100")
+    print(f"Attack Graph Risk: {graph_risk}/100")
+    print(f"Total Risk: {total_risk}/100")
     print(f"Risk Reason: {risk_reason}")
+
+    print_attack_paths(attack_paths)
 
     print(f"\nDecision: {decision}")
 
@@ -104,9 +204,9 @@ def main():
             print(f"- {reason}")
 
     if decision == "BLOCK":
-        sys.exit(1)
+        return 1
 
-    sys.exit(0)
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
