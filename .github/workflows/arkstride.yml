@@ -2,8 +2,6 @@ name: ARKSTRIDE Reality Verification
 
 on:
   push:
-    branches:
-      - main
   pull_request:
 
 jobs:
@@ -13,8 +11,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install Python
         uses: actions/setup-python@v5
@@ -35,6 +31,14 @@ jobs:
 
       - name: Scan Terraform Infrastructure
         run: python scripts/scan_terraform.py
-      - name: Generate PR Comment
+
+      - name: Verify Remediation Loop
+        run: python scripts/verify_remediation.py
+
+      - name: Generate PR Comment If Report Exists
         run: |
-          python scripts/pr_comment.py reports/latest_report.json
+          if [ -f reports/latest_report.json ]; then
+            python scripts/pr_comment.py reports/latest_report.json
+          else
+            echo "No ARKSTRIDE report generated."
+          fi

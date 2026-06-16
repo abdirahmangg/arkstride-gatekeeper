@@ -1,0 +1,6 @@
+
+# ARKSTRIDE generated artifacts
+reports/
+scenarios/generated/
+*.fixed.tf
+arkstride_pr_comment.md

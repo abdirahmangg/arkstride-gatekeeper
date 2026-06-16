@@ -1,8 +1,0 @@
-{
-  "actor": "developer",
-  "actor_type": "human",
-  "action": "infrastructure_change",
-  "target": "terraform",
-  "environment": "dev",
-  "reason": "No dangerous Terraform pattern detected in examples/safe/safe_terraform.tf."
-}
