@@ -26,6 +26,9 @@ jobs:
       - name: Verify OPA Installation
         run: opa version
 
+      - name: Build Enterprise Genome
+        run: python scripts/genome_builder.py
+
       - name: Verify Safe Scenarios
         run: python scripts/verify_all.py
 

@@ -4,3 +4,6 @@ reports/
 scenarios/generated/
 *.fixed.tf
 arkstride_pr_comment.md
+
+# ARKSTRIDE generated genome
+genome/enterprise_genome.json
