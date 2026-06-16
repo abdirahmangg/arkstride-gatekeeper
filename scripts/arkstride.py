@@ -7,6 +7,7 @@ POLICY_FILE = "policies/arkstride.rego"
 RISK_GRAPH_FILE = "genome/risk_graph.json"
 ATTACK_GRAPH_FILE = Path("genome/attack_graph.json")
 FUTURE_LIBRARY_FILE = Path("genome/future_library.json")
+REMEDIATION_FILE = "genome/remediation_library.json"
 
 
 def load_json(path):
@@ -224,6 +225,19 @@ def print_possible_futures(futures):
         print(f"  Description: {future['description']}")
 
 
+def find_remediation(action, target):
+    if not Path(REMEDIATION_FILE).exists():
+        return None
+
+    library = load_json(REMEDIATION_FILE)
+
+    for item in library.get("remediations", []):
+        if item.get("action") == action and item.get("target") == target:
+            return item
+
+    return None
+
+
 def main():
     if len(sys.argv) != 2:
         print("Usage:")
@@ -249,7 +263,7 @@ def main():
     decision, total_risk = decision_from_risk(
         max(future_risk, future_simulation_risk),
         graph_risk,
-        denies
+        denies,
     )
 
     print("\nARKSTRIDE REALITY VERIFICATION\n")
@@ -269,6 +283,16 @@ def main():
     print_possible_futures(possible_futures)
 
     print(f"\nDecision: {decision}")
+
+    remediation = find_remediation(scenario.get("action"), scenario.get("target"))
+
+    if remediation:
+        print("\nSuggested Remediation:")
+        print(remediation.get("title"))
+
+        print("\nSuggested Patch:")
+        for patch in remediation.get("patch", []):
+            print(f"- {patch}")
 
     if denies:
         print("\nPolicy Violations:")

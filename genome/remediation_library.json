@@ -1,0 +1,37 @@
+{
+  "remediations": [
+    {
+      "action": "public_expose",
+      "target": "s3",
+      "title": "Secure S3 Bucket",
+      "risk_reduction": 90,
+      "patch": [
+        "block_public_acls = true",
+        "block_public_policy = true",
+        "ignore_public_acls = true",
+        "restrict_public_buckets = true"
+      ]
+    },
+    {
+      "action": "grant_admin",
+      "target": "service_account",
+      "title": "Remove Excessive Privileges",
+      "risk_reduction": 80,
+      "patch": [
+        "remove admin role",
+        "apply least privilege role"
+      ]
+    },
+    {
+      "action": "delete",
+      "target": "production_database",
+      "title": "Protect Production Database",
+      "risk_reduction": 100,
+      "patch": [
+        "require approval workflow",
+        "require break-glass procedure",
+        "deny direct delete operations"
+      ]
+    }
+  ]
+}
