@@ -1,0 +1,8 @@
+{
+  "actor": "developer",
+  "actor_type": "human",
+  "action": "read",
+  "target": "dev_logs",
+  "environment": "dev",
+  "reason": "No dangerous IAM privilege pattern detected in examples/iam/safe/read_only_policy.json."
+}

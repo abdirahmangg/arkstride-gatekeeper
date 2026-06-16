@@ -1,0 +1,8 @@
+{
+  "actor": "developer",
+  "actor_type": "human",
+  "action": "grant_admin",
+  "target": "service_account",
+  "environment": "prod",
+  "reason": "IAM policy examples/iam/attack/admin_policy.json grants wildcard admin privileges."
+}

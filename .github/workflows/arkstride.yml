@@ -32,6 +32,9 @@ jobs:
       - name: Scan Terraform Infrastructure
         run: python scripts/scan_terraform.py
 
+      - name: Scan IAM Policies
+        run: python scripts/scan_iam.py
+
       - name: Verify Remediation Loop
         run: python scripts/verify_remediation.py
 
