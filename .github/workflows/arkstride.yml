@@ -35,3 +35,6 @@ jobs:
 
       - name: Scan Terraform Infrastructure
         run: python scripts/scan_terraform.py
+      - name: Generate PR Comment
+        run: |
+          python scripts/pr_comment.py reports/latest_report.json

@@ -5,9 +5,10 @@ from pathlib import Path
 
 POLICY_FILE = "policies/arkstride.rego"
 RISK_GRAPH_FILE = "genome/risk_graph.json"
-ATTACK_GRAPH_FILE = Path("genome/attack_graph.json")
-FUTURE_LIBRARY_FILE = Path("genome/future_library.json")
+ATTACK_GRAPH_FILE = "genome/attack_graph.json"
+FUTURE_LIBRARY_FILE = "genome/future_library.json"
 REMEDIATION_FILE = "genome/remediation_library.json"
+REPORT_FILE = "reports/latest_report.json"
 
 
 def load_json(path):
@@ -48,9 +49,6 @@ def extract_denies(data):
 
 
 def calculate_future_risk(scenario):
-    if not Path(RISK_GRAPH_FILE).exists():
-        return 10, "No high-risk future state matched."
-
     risk_graph = load_json(RISK_GRAPH_FILE)
 
     default_risk = 10
@@ -74,10 +72,12 @@ def build_adjacency(edges):
         target = edge["to"]
         relationship = edge.get("relationship", "connected_to")
 
-        graph.setdefault(source, []).append({
-            "to": target,
-            "relationship": relationship,
-        })
+        graph.setdefault(source, []).append(
+            {
+                "to": target,
+                "relationship": relationship,
+            }
+        )
 
     return graph
 
@@ -90,11 +90,13 @@ def find_paths_to_crown_jewels(start, adjacency, crown_jewels):
         current, path, relationships = queue.pop(0)
 
         if current in crown_jewels and current != start:
-            found_paths.append({
-                "path": path,
-                "relationships": relationships,
-                "impact": current,
-            })
+            found_paths.append(
+                {
+                    "path": path,
+                    "relationships": relationships,
+                    "impact": current,
+                }
+            )
             continue
 
         for neighbor in adjacency.get(current, []):
@@ -141,7 +143,7 @@ def risk_from_attack_paths(paths):
 
 
 def analyze_attack_graph(target):
-    if not ATTACK_GRAPH_FILE.exists():
+    if not Path(ATTACK_GRAPH_FILE).exists():
         return [], 0
 
     attack_graph = load_json(ATTACK_GRAPH_FILE)
@@ -155,7 +157,7 @@ def analyze_attack_graph(target):
 
 
 def simulate_possible_futures(scenario):
-    if not FUTURE_LIBRARY_FILE.exists():
+    if not Path(FUTURE_LIBRARY_FILE).exists():
         return []
 
     library = load_json(FUTURE_LIBRARY_FILE)
@@ -179,6 +181,22 @@ def risk_from_futures(futures):
         return 0
 
     return max(future["risk"] for future in futures)
+
+
+def find_remediation(action, target):
+    if not Path(REMEDIATION_FILE).exists():
+        return None
+
+    library = load_json(REMEDIATION_FILE)
+
+    for item in library.get("remediations", []):
+        action_match = item["action"] == action
+        target_match = item["target"] == target or item["target"] == "*"
+
+        if action_match and target_match:
+            return item
+
+    return None
 
 
 def decision_from_risk(future_risk, graph_risk, denies):
@@ -225,17 +243,55 @@ def print_possible_futures(futures):
         print(f"  Description: {future['description']}")
 
 
-def find_remediation(action, target):
-    if not Path(REMEDIATION_FILE).exists():
-        return None
+def print_remediation(remediation):
+    if not remediation:
+        print("\nSuggested Remediation: none found")
+        return
 
-    library = load_json(REMEDIATION_FILE)
+    print("\nSuggested Remediation:")
+    print(remediation["title"])
 
-    for item in library.get("remediations", []):
-        if item.get("action") == action and item.get("target") == target:
-            return item
+    print("\nSuggested Patch:")
 
-    return None
+    for patch in remediation.get("patch", []):
+        print(f"- {patch}")
+
+
+def write_report(
+    scenario,
+    decision,
+    total_risk,
+    future_risk,
+    graph_risk,
+    future_simulation_risk,
+    risk_reason,
+    attack_paths,
+    possible_futures,
+    remediation,
+    denies,
+):
+    report = {
+        "scenario": scenario,
+        "decision": decision,
+        "total_risk": total_risk,
+        "future_risk": future_risk,
+        "attack_graph_risk": graph_risk,
+        "future_simulation_risk": future_simulation_risk,
+        "risk_reason": risk_reason,
+        "attack_paths": attack_paths,
+        "possible_futures": possible_futures,
+        "remediation": remediation,
+        "policy_violations": denies,
+    }
+
+    reports_path = Path("reports")
+    if reports_path.exists() and not reports_path.is_dir():
+        reports_path.unlink()
+
+    reports_path.mkdir(exist_ok=True)
+    Path(REPORT_FILE).write_text(json.dumps(report, indent=2))
+
+    return report
 
 
 def main():
@@ -260,10 +316,31 @@ def main():
     possible_futures = simulate_possible_futures(scenario)
     future_simulation_risk = risk_from_futures(possible_futures)
 
+    combined_future_risk = max(future_risk, future_simulation_risk)
+
     decision, total_risk = decision_from_risk(
-        max(future_risk, future_simulation_risk),
+        combined_future_risk,
         graph_risk,
         denies,
+    )
+
+    remediation = find_remediation(
+        scenario.get("action"),
+        scenario.get("target"),
+    )
+
+    write_report(
+        scenario=scenario,
+        decision=decision,
+        total_risk=total_risk,
+        future_risk=future_risk,
+        graph_risk=graph_risk,
+        future_simulation_risk=future_simulation_risk,
+        risk_reason=risk_reason,
+        attack_paths=attack_paths,
+        possible_futures=possible_futures,
+        remediation=remediation,
+        denies=denies,
     )
 
     print("\nARKSTRIDE REALITY VERIFICATION\n")
@@ -284,22 +361,13 @@ def main():
 
     print(f"\nDecision: {decision}")
 
-    remediation = find_remediation(scenario.get("action"), scenario.get("target"))
-
-    if remediation:
-        print("\nSuggested Remediation:")
-        print(remediation.get("title"))
-
-        print("\nSuggested Patch:")
-        for patch in remediation.get("patch", []):
-            print(f"- {patch}")
-
     if denies:
         print("\nPolicy Violations:")
         for reason in denies:
             print(f"- {reason}")
 
     if decision == "BLOCK":
+        print_remediation(remediation)
         return 1
 
     return 0
