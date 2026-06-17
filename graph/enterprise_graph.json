@@ -1,0 +1,129 @@
+{
+  "nodes": [
+    {
+      "id": "identity:ai_coding_agent",
+      "type": "ai_agent",
+      "metadata": {
+        "trust_level": "low"
+      }
+    },
+    {
+      "id": "github_repo:arkstride-gatekeeper",
+      "type": "github_repository",
+      "metadata": {
+        "criticality": "high"
+      }
+    },
+    {
+      "id": "github_actions:arkstride-gatekeeper",
+      "type": "ci_pipeline",
+      "metadata": {}
+    },
+    {
+      "id": "github_secret:AWS_DEPLOY_ROLE",
+      "type": "secret",
+      "metadata": {}
+    },
+    {
+      "id": "aws_account:prod",
+      "type": "aws_account",
+      "metadata": {
+        "environment": "prod"
+      }
+    },
+    {
+      "id": "iam_role:deployment_role",
+      "type": "iam_role",
+      "metadata": {
+        "environment": "prod"
+      }
+    },
+    {
+      "id": "s3:prod_customer_data",
+      "type": "s3_bucket",
+      "metadata": {
+        "environment": "prod"
+      }
+    },
+    {
+      "id": "database:production",
+      "type": "database",
+      "metadata": {
+        "criticality": "crown_jewel"
+      }
+    },
+    {
+      "id": "data:customer_pii",
+      "type": "data_asset",
+      "metadata": {
+        "criticality": "crown_jewel"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "identity:ai_coding_agent",
+      "to": "github_repo:arkstride-gatekeeper",
+      "relationship": "can_write_to",
+      "evidence": {
+        "source": "simulated_github_ingestion"
+      }
+    },
+    {
+      "from": "github_repo:arkstride-gatekeeper",
+      "to": "github_actions:arkstride-gatekeeper",
+      "relationship": "triggers",
+      "evidence": {
+        "source": "workflow_detection"
+      }
+    },
+    {
+      "from": "github_actions:arkstride-gatekeeper",
+      "to": "github_secret:AWS_DEPLOY_ROLE",
+      "relationship": "can_access",
+      "evidence": {
+        "source": "github_actions_secret_mapping"
+      }
+    },
+    {
+      "from": "github_secret:AWS_DEPLOY_ROLE",
+      "to": "iam_role:deployment_role",
+      "relationship": "authenticates_as",
+      "evidence": {
+        "source": "simulated_secret_mapping"
+      }
+    },
+    {
+      "from": "iam_role:deployment_role",
+      "to": "aws_account:prod",
+      "relationship": "can_administer",
+      "evidence": {
+        "source": "simulated_iam_policy"
+      }
+    },
+    {
+      "from": "aws_account:prod",
+      "to": "database:production",
+      "relationship": "can_access",
+      "evidence": {
+        "source": "simulated_network_path"
+      }
+    },
+    {
+      "from": "database:production",
+      "to": "data:customer_pii",
+      "relationship": "contains",
+      "evidence": {
+        "source": "crown_jewel_mapping"
+      }
+    },
+    {
+      "from": "s3:prod_customer_data",
+      "to": "aws_account:prod",
+      "relationship": "can_expose_credentials_to",
+      "evidence": {
+        "source": "public_bucket_exposure"
+      }
+    }
+  ]
+}
