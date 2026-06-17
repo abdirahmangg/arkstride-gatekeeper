@@ -58,6 +58,22 @@
       "metadata": {
         "criticality": "crown_jewel"
       }
+    },
+    {
+      "id": "github_repo:abdirahmangg/arkstride-gatekeeper",
+      "type": "github_repository",
+      "metadata": {
+        "visibility": "PUBLIC",
+        "default_branch": "main"
+      }
+    },
+    {
+      "id": "github_workflow:abdirahmangg/arkstride-gatekeeper:ARKSTRIDE Graph-Native Verification",
+      "type": "github_workflow",
+      "metadata": {
+        "path": ".github/workflows/arkstride.yml",
+        "state": "active"
+      }
     }
   ],
   "edges": [
@@ -123,6 +139,14 @@
       "relationship": "can_expose_credentials_to",
       "evidence": {
         "source": "public_bucket_exposure"
+      }
+    },
+    {
+      "from": "github_repo:abdirahmangg/arkstride-gatekeeper",
+      "to": "github_workflow:abdirahmangg/arkstride-gatekeeper:ARKSTRIDE Graph-Native Verification",
+      "relationship": "defines_workflow",
+      "evidence": {
+        "source": "github_api"
       }
     }
   ]
