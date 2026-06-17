@@ -6,14 +6,9 @@ SCENARIOS_DIR = Path("scenarios/safe")
 
 def main():
     scenario_files = sorted(SCENARIOS_DIR.glob("*.json"))
-
-    if not scenario_files:
-        print("No safe scenario files found.")
-        return 0
-
     failed = []
 
-    print("\nARKSTRIDE BULK REALITY VERIFICATION\n")
+    print("\nARKSTRIDE GRAPH-NATIVE SAFE SCENARIO VERIFICATION\n")
 
     for scenario in scenario_files:
         print("=" * 60)
