@@ -1,18 +1,46 @@
 {
   "nodes": [
     "internet",
+    "github",
+    "source_code",
+    "ci_pipeline",
+    "github_actions_secrets",
     "s3",
     "aws_account",
     "iam_roles",
+    "lambda_functions",
+    "kubernetes_cluster",
     "production_database",
     "customer_pii",
-    "payment_system"
+    "payment_system",
+    "ai_coding_agent",
+    "service_account"
   ],
   "edges": [
     {
       "from": "internet",
-      "to": "s3",
-      "relationship": "public_access"
+      "to": "github",
+      "relationship": "phishing_or_token_theft"
+    },
+    {
+      "from": "github",
+      "to": "source_code",
+      "relationship": "repository_access"
+    },
+    {
+      "from": "source_code",
+      "to": "ci_pipeline",
+      "relationship": "code_execution"
+    },
+    {
+      "from": "ci_pipeline",
+      "to": "github_actions_secrets",
+      "relationship": "secret_access"
+    },
+    {
+      "from": "github_actions_secrets",
+      "to": "aws_account",
+      "relationship": "cloud_credential_access"
     },
     {
       "from": "s3",
@@ -23,6 +51,26 @@
       "from": "aws_account",
       "to": "iam_roles",
       "relationship": "privilege_escalation"
+    },
+    {
+      "from": "iam_roles",
+      "to": "lambda_functions",
+      "relationship": "function_execution"
+    },
+    {
+      "from": "lambda_functions",
+      "to": "production_database",
+      "relationship": "database_access"
+    },
+    {
+      "from": "iam_roles",
+      "to": "kubernetes_cluster",
+      "relationship": "cluster_admin_access"
+    },
+    {
+      "from": "kubernetes_cluster",
+      "to": "production_database",
+      "relationship": "service_network_access"
     },
     {
       "from": "iam_roles",
@@ -38,6 +86,21 @@
       "from": "aws_account",
       "to": "payment_system",
       "relationship": "financial_system_access"
+    },
+    {
+      "from": "ai_coding_agent",
+      "to": "github",
+      "relationship": "repo_write_access"
+    },
+    {
+      "from": "ai_coding_agent",
+      "to": "ci_pipeline",
+      "relationship": "deployment_execution"
+    },
+    {
+      "from": "service_account",
+      "to": "iam_roles",
+      "relationship": "role_assumption"
     }
   ],
   "crown_jewels": [

@@ -1,0 +1,8 @@
+{
+  "actor": "attacker",
+  "actor_type": "external",
+  "action": "compromise",
+  "target": "github",
+  "environment": "prod",
+  "reason": "Attacker gains access to GitHub repository or token."
+}

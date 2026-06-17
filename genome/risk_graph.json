@@ -19,10 +19,28 @@
       "reason": "Granting admin rights can create privilege escalation paths."
     },
     {
+      "action": "compromise",
+      "target": "github",
+      "future_risk": 95,
+      "reason": "GitHub compromise can alter source code, access CI pipelines, expose secrets, and reach production infrastructure."
+    },
+    {
+      "action": "write",
+      "target": "github",
+      "future_risk": 85,
+      "reason": "Direct write access to GitHub can trigger deployment pipelines and production changes."
+    },
+    {
       "action": "read",
       "target": "postgres",
       "future_risk": 5,
       "reason": "Reading a development database has low operational risk."
+    },
+    {
+      "action": "read",
+      "target": "dev_logs",
+      "future_risk": 5,
+      "reason": "Reading development logs has low operational risk."
     }
   ]
 }

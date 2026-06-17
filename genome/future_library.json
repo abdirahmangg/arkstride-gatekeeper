@@ -19,6 +19,24 @@
       "description": "Public S3 exposure can expose credentials that give attackers access to payment infrastructure."
     },
     {
+      "name": "source_to_prod_compromise",
+      "trigger_action": "compromise",
+      "trigger_target": "github",
+      "future_path": ["github", "source_code", "ci_pipeline", "github_actions_secrets", "aws_account", "iam_roles", "production_database", "customer_pii"],
+      "impact": "customer_pii",
+      "risk": 100,
+      "description": "GitHub compromise can alter source code, trigger CI pipelines, expose cloud secrets, and reach customer data."
+    },
+    {
+      "name": "ai_agent_uncontrolled_deployment",
+      "trigger_action": "write",
+      "trigger_target": "github",
+      "future_path": ["github", "source_code", "ci_pipeline", "github_actions_secrets", "aws_account"],
+      "impact": "aws_account",
+      "risk": 90,
+      "description": "AI agent repository write access can trigger production deployment paths and expose cloud credentials."
+    },
+    {
       "name": "production_database_loss",
       "trigger_action": "delete",
       "trigger_target": "production_database",
