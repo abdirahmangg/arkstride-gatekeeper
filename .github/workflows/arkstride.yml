@@ -8,6 +8,10 @@ jobs:
   reality-verification:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      pull-requests: write
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -41,10 +45,20 @@ jobs:
       - name: Verify Remediation Loop
         run: python scripts/verify_remediation.py
 
-      - name: Generate PR Comment If Report Exists
+      - name: Generate ARKSTRIDE Narrative If Report Exists
         run: |
           if [ -f reports/latest_report.json ]; then
             python scripts/pr_comment.py reports/latest_report.json
           else
             echo "No ARKSTRIDE report generated."
           fi
+
+      - name: Upload ARKSTRIDE Report Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arkstride-reports
+          path: |
+            reports/
+            arkstride_pr_comment.md
+          if-no-files-found: ignore
